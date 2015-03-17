@@ -35,15 +35,15 @@ enum {
 - (void)lazyScrollView:(DMLazyScrollView *)pagingView currentPageChanged:(NSInteger)currentPageIndex;
 @end
 
-typedef UIViewController*(^DMLazyScrollViewDataSource)(NSUInteger index);
+typedef NSString* (^DMLazyScrollViewDataSource)(NSUInteger index);
 
 @interface DMLazyScrollView : UIScrollView
 
 @property (copy)                DMLazyScrollViewDataSource      dataSource;
 @property (nonatomic, assign)   id<DMLazyScrollViewDelegate>    controlDelegate;
 
-@property (nonatomic,assign)    NSUInteger                      numberOfPages;
-@property (readonly)            NSUInteger                      currentPage;
+@property (nonatomic,assign)    NSUInteger                      numberOfImages;
+@property (readonly)            NSUInteger                      currentImage;
 @property (readonly)            DMLazyScrollViewDirection       direction;
 
 @property (nonatomic, assign) BOOL autoPlay;

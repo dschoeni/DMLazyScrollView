@@ -8,6 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
-@interface DMViewController : UIViewController
+@interface DMViewController : UIViewController {
+    NSMutableArray* imagePaths;
+}
 
 @end

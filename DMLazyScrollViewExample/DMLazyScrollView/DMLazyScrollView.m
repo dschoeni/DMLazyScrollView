@@ -17,8 +17,8 @@ enum {
 #define kDMLazyScrollViewTransitionDuration     0.4
 
 @interface DMLazyScrollView() <UIScrollViewDelegate> {
-    NSUInteger      numberOfPages;
-    NSUInteger      currentPage;
+    NSUInteger      numberOfImages;
+    NSUInteger      currentImage;
     BOOL            isManualAnimating;
     BOOL            circularScrollEnabled;
 }
@@ -27,7 +27,7 @@ enum {
 
 @implementation DMLazyScrollView
 
-@synthesize numberOfPages,currentPage;
+@synthesize numberOfImages,currentImage;
 @synthesize dataSource,controlDelegate;
 @synthesize autoPlay = _autoPlay;
 @synthesize timer_autoPlay = _timer_autoPlay;
@@ -59,14 +59,14 @@ enum {
 - (void)setAutoPlay:(BOOL)autoPlay
 {
     _autoPlay = autoPlay;
-    if(self.numberOfPages)
+    if(self.numberOfImages)
     {
         [self reloadData];
     }
 }
 
 - (BOOL)hasMultiplePages {
-    return numberOfPages > 1;
+    return numberOfImages > 1;
 }
 
 - (void)resetAutoPlay
@@ -99,8 +99,8 @@ enum {
 
 - (void)autoPlayGoToNextPage
 {
-    NSInteger nextPage = self.currentPage+1;
-    if(nextPage >= self.numberOfPages)
+    NSInteger nextPage = self.currentImage+1;
+    if(nextPage >= self.numberOfImages)
     {
         nextPage = 0;
     }
@@ -142,13 +142,13 @@ enum {
     self.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
     self.delegate = self;
     self.contentSize = CGSizeMake(self.frame.size.width, self.contentSize.height);
-    currentPage = NSNotFound;
+    currentImage = NSNotFound;
 }
 
-- (void) setNumberOfPages:(NSUInteger)pages {
-    if (pages != numberOfPages) {
-        numberOfPages = pages;
-        int offset = [self hasMultiplePages] ? numberOfPages + 2 : 1;
+- (void) setNumberOfImages:(NSUInteger)pages {
+    if (pages != numberOfImages) {
+        numberOfImages = pages;
+        int offset = [self hasMultiplePages] ? numberOfImages + 2 : 1;
         if (_direction == DMLazyScrollViewDirectionHorizontal) {
             self.contentSize = CGSizeMake(self.frame.size.width * offset,
                                           self.contentSize.height);
@@ -217,12 +217,12 @@ enum {
                                                       DMLazyScrollViewScrollDirectionForward); // we're moving forward
 
     // you can go back if circular mode is enabled or your current page is not the first page
-    BOOL canScrollBackward = (circularScrollEnabled || (!circularScrollEnabled && self.currentPage != 0));
+    BOOL canScrollBackward = (circularScrollEnabled || (!circularScrollEnabled && self.currentImage != 0));
     // you can go forward if circular mode is enabled and current page is not the last page
-    BOOL canScrollForward = (circularScrollEnabled || (!circularScrollEnabled && self.currentPage < (self.numberOfPages-1)));
+    BOOL canScrollForward = (circularScrollEnabled || (!circularScrollEnabled && self.currentImage < (self.numberOfImages-1)));
     
-    NSInteger prevPage = [self pageIndexByAdding:-1 from:self.currentPage];
-    NSInteger nextPage = [self pageIndexByAdding:+1 from:self.currentPage];
+    NSInteger prevPage = [self pageIndexByAdding:-1 from:self.currentImage];
+    NSInteger nextPage = [self pageIndexByAdding:+1 from:self.currentImage];
     if (prevPage == nextPage) {
         // This happends when our scrollview have only two and we should have the same prev/next page at left/right
         // A single UIView instance can't be in two different location at the same moment so we need to place it
@@ -237,12 +237,12 @@ enum {
         return;
     } else self.bounces = YES;
 
-    NSInteger newPageIndex = currentPage;
+    NSInteger newPageIndex = currentImage;
     
     if (offset <= size)
-        newPageIndex = [self pageIndexByAdding:-1 from:currentPage];
+        newPageIndex = [self pageIndexByAdding:-1 from:currentImage];
     else if (offset >= (size*3))
-        newPageIndex = [self pageIndexByAdding:+1 from:currentPage];
+        newPageIndex = [self pageIndexByAdding:+1 from:currentImage];
     
     [self setCurrentViewController:newPageIndex];
     
@@ -256,13 +256,13 @@ enum {
 }
 
 - (void) setCurrentViewController:(NSInteger) index {
-    if (index == currentPage) return;
-    currentPage = index;
+    if (index == currentImage) return;
+    currentImage = index;
     
     [self.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     
-    NSInteger prevPage = [self pageIndexByAdding:-1 from:currentPage];
-    NSInteger nextPage = [self pageIndexByAdding:+1 from:currentPage];
+    NSInteger prevPage = [self pageIndexByAdding:-1 from:currentImage];
+    NSInteger nextPage = [self pageIndexByAdding:+1 from:currentImage];
     
     [self loadControllerAtIndex:index andPlaceAtIndex:0];
     // Pre-load the content for the adjacent pages if multiple pages are to be displayed
@@ -276,7 +276,7 @@ enum {
     self.contentOffset = [self createPoint:size * ([self hasMultiplePages] ? 2 : 0)]; // recenter
     
     if ([self.controlDelegate respondsToSelector:@selector(lazyScrollView:currentPageChanged:)])
-        [self.controlDelegate lazyScrollView:self currentPageChanged:self.currentPage];
+        [self.controlDelegate lazyScrollView:self currentPageChanged:self.currentImage];
 }
 
 - (UIViewController *) visibleViewController {
@@ -308,13 +308,13 @@ enum {
 
 - (NSInteger) pageIndexByAdding:(NSInteger) offset from:(NSInteger) index {
     // Complicated stuff with negative modulo
-    while (offset<0) offset += numberOfPages;
-    return (numberOfPages+index+offset) % numberOfPages;
+    while (offset<0) offset += numberOfImages;
+    return (numberOfImages+index+offset) % numberOfImages;
 
 }
 
 - (void) moveByPages:(NSInteger) offset animated:(BOOL) animated {
-    NSUInteger finalIndex = [self pageIndexByAdding:offset from:self.currentPage];
+    NSUInteger finalIndex = [self pageIndexByAdding:offset from:self.currentImage];
     DMLazyScrollViewTransition transition = (offset >= 0 ?  DMLazyScrollViewTransitionForward :
                                              DMLazyScrollViewTransitionBackward);
     [self setPage:finalIndex transition:transition animated:animated];
@@ -325,15 +325,15 @@ enum {
 }
 
 - (void) setPage:(NSInteger) newIndex transition:(DMLazyScrollViewTransition) transition animated:(BOOL) animated {
-    if (newIndex == currentPage) return;
+    if (newIndex == currentImage) return;
     
     if (animated) {
         //BOOL isOnePageMove = (abs(self.currentPage-newIndex) == 1);
         CGPoint finalOffset;
         
         if (transition == DMLazyScrollViewTransitionAuto) {
-            if (newIndex > self.currentPage) transition = DMLazyScrollViewTransitionForward;
-            else if (newIndex < self.currentPage) transition = DMLazyScrollViewTransitionBackward;
+            if (newIndex > self.currentImage) transition = DMLazyScrollViewTransitionForward;
+            else if (newIndex < self.currentImage) transition = DMLazyScrollViewTransitionBackward;
         }
         
         CGFloat size =(_direction==DMLazyScrollViewDirectionHorizontal) ? self.frame.size.width : self.frame.size.height;
@@ -370,18 +370,28 @@ enum {
     }
 }
 
-- (void) setCurrentPage:(NSUInteger)newCurrentPage {
+- (void) setCurrentImage:(NSUInteger)newCurrentPage {
     [self setCurrentViewController:newCurrentPage];
 }
 
 - (UIViewController *) loadControllerAtIndex:(NSInteger) index andPlaceAtIndex:(NSInteger) destIndex {
-    UIViewController *viewController = dataSource(index);
+    
+    UIViewController *viewController = [[UIViewController alloc] init];
+    [[viewController view] setBackgroundColor:[UIColor redColor]];
+    
+    // Get ImagePath from DataSource
+    NSString* unixImagePath = dataSource(index);
+    UIImageView* imageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:unixImagePath]];
+    [imageView setFrame:CGRectMake(0, 0, viewController.view.frame.size.width, viewController.view.frame.size.height)];
+    [[viewController view] addSubview:imageView];
+    
     viewController.view.tag = 0;
     
-    CGRect viewFrame = CGRectMake(0, 0, self.frame.size.width, self.frame.size.height);
+    // self.frame.size.width --> 150
+    CGRect viewFrame = CGRectMake(0, 0, 150, self.frame.size.height);
     int offset = [self hasMultiplePages] ? 2 : 0;
     if (_direction == DMLazyScrollViewDirectionHorizontal) {
-        viewFrame = CGRectOffset(viewFrame, self.frame.size.width * (destIndex + offset), 0);
+        viewFrame = CGRectOffset(viewFrame, 150 * (destIndex + offset), 0);
     } else {
         viewFrame = CGRectOffset(viewFrame, 0, self.frame.size.height * (destIndex + offset));
     }
@@ -399,7 +409,7 @@ enum {
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     if (nil != controlDelegate && [controlDelegate respondsToSelector:@selector(lazyScrollViewDidEndDecelerating:atPageIndex:)])
-        [controlDelegate lazyScrollViewDidEndDecelerating:self atPageIndex:self.currentPage];
+        [controlDelegate lazyScrollViewDidEndDecelerating:self atPageIndex:self.currentImage];
 }
 
 
